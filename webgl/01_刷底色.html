@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>01-刷底色</title>
+    <style>
+        #canvas{
+            background-color: antiquewhite;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+
+    <script>
+        const canvas = document.querySelector("#canvas")
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        // 获取二维画笔
+        // const gl = canvas.getContext("2d")
+        // 获取三维画笔
+        const gl = canvas.getContext("webgl");
+        // 声明底色  
+        gl.clearColor(0,0,0,1)
+        // 刷底色
+        gl.clear(gl.COLOR_BUFFER_BIT)
+    </script>
+</body>
+</html>
