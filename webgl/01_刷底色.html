@@ -22,9 +22,32 @@
         // const gl = canvas.getContext("2d")
         // 获取三维画笔
         const gl = canvas.getContext("webgl");
-        // 声明底色  
-        gl.clearColor(0,0,0,1)
+        // 声明底色  黄色
+        gl.clearColor(1,1,0,1)
         // 刷底色
+        gl.clear(gl.COLOR_BUFFER_BIT)
+
+        // CSS 颜色 红色
+        const cssColor = 'rgba(255,0,0,1)';
+        // 正则
+        const reg = RegExp(/\((.*)\)/);
+        // 捕捉数据
+        const rgbaStr = reg.exec(cssColor)[1];
+        console.log(rgbaStr)
+        // 加工数据
+        const rgba = rgbaStr.split(',').map((n)=>{
+            return parseInt(n)
+        })
+        console.log(rgba)
+        // CSS rgb取值范围（0，255） webgl中rgb取值范围（0，1）   a代表透明度 在CSS和webgl中取值范围相同 都为（0，1）
+        const r = rgba[0]/255
+        const g = rgba[1]/255
+        const b = rgba[2]/255
+        const a = rgba[3]
+
+        // 再次刷底色
+        gl.clearColor(r,g,b,a)
+        // 上色
         gl.clear(gl.COLOR_BUFFER_BIT)
     </script>
 </body>
