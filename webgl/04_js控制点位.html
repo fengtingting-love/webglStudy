@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>04-js控制点位</title>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+
+    <!-- attribute属性只可用于订点着色器中，定义变量 [attribute 类型 变量名称] -->
+    <script id="vertexShader" type="x-shader/x-vertex">
+        attribute vec4 a_position;
+        void main(){
+            gl_Position=a_position;
+            gl_PointSize = 50.0;
+        }
+    </script>
+    <script id="fragmentShader" type="x-shader/x-fragment">
+        void main(){
+            gl_FragColor=vec4(1.0,1.0,0.0,1.0);
+        }
+    </script>
+
+
+    <script type="module">
+        import {initShaders} from "./jsm/Utils.js";
+        const canvas = document.getElementById("canvas")
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        const gl = canvas.getContext("webgl");
+
+        const vsSource = document.getElementById('vertexShader').innerText;
+        const fsSource = document.getElementById('fragmentShader').innerText;
+
+        initShaders(gl,vsSource,fsSource);
+
+        // getAttribLocation js从程序对象中获取变量的方法 参数为程序对象及其中变量的名称
+        const a_position =gl.getAttribLocation(gl.program,'a_position')
+
+        // 设置点位信息 因为获取的变量是glsl es语言 所以设置变量要用vertexAttrib3f 参数1为变量名称，后面的参数为x,y,z的值
+        gl.vertexAttrib3f(a_position,0.0,0.0,0.0)
+        
+
+        gl.clearColor(0.0,0.0,0.0,1.0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+
+        gl.drawArrays(gl.POINT,0,1)
+    </script>
+</body>
+</html>
