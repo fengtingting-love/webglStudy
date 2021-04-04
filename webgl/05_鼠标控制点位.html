@@ -40,17 +40,35 @@
         const a_position =gl.getAttribLocation(gl.program,'a_position')
 
         // 设置点位信息 因为获取的变量是glsl es语言 所以设置变量要用vertexAttrib3f 参数1为变量名称，后面的参数为x,y,z的值
-        // 3f 改变x,y,z值
-        // gl.vertexAttrib3f(a_position,0.0,0.0,0.0)
-        // 2f 改变x,y值
-        // gl.vertexAttrib2f(a_position,0.5,0.5)    
-        // 1f 改变x值
-        gl.vertexAttrib1f(a_position,0.5)        
+        gl.vertexAttrib3f(a_position,0.0,0.0,0.0)      
 
         gl.clearColor(0.0,0.0,0.0,1.0);
         gl.clear(gl.COLOR_BUFFER_BIT);
 
         gl.drawArrays(gl.POINT,0,1)
+
+        // 给canvas画布上面加上鼠标点击事件
+        canvas.addEventListener('click',({clientX,clientY})=>{
+            // 向量a clientX,clientY,即鼠标点击的位置
+            // console.log(clientX,clientY)
+            // 向量b {left,top} = canvas画布左上角的位置，width,height对应canvas画布的宽高
+            const {left,top,width,height} = canvas.getBoundingClientRect();
+            // 向量c = 向量a-向量b   获取了鼠标点击画布时，该鼠标点距离canvas画布的距离
+            const [cssX,cssY] = [clientX - left,clientY - top];
+            // 获取坐标原点的位置
+            const [halfWidth,halfHeight] = [width/2,height/2];
+            // 获取鼠标点相对于坐标原点的位置
+            let [xBaseCenter,yBaseCenter] = [cssX-halfWidth,cssY-halfHeight]
+            // 解决y方向差异
+            yBaseCenter = -yBaseCenter;
+            // 因为canvas画布的坐标系与webgl坐标系坐标基底的差异，所以要进行一个当前坐标点比上webgl坐标系求得最终在webgl中的位置
+            const [x,y] = [xBaseCenter/halfWidth,yBaseCenter/halfHeight];
+
+            // 设置attribute变量，在每一次鼠标点击时重新设置点位，达到鼠标点击何处点位移动到何处的功能
+            gl.vertexAttrib2f(a_position,x,y);
+            gl.clear(gl.COLOR_BUFFER_BIT);
+            gl.drawArrays(gl.POINTS,0,1)
+        })
     </script>
 </body>
 </html>

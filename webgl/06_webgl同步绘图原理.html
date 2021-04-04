@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>06-webgl同步绘图原理</title>
+</head>
+
+<body>
+    <canvas id="canvas"></canvas>
+
+    <!-- attribute属性只可用于顶点着色器中，定义变量 [attribute 类型 变量名称] -->
+    <script id="vertexShader" type="x-shader/x-vertex">
+        attribute vec4 a_position;
+        void main(){
+            gl_Position=a_position;
+            gl_PointSize = 50.0;
+        }
+    </script>
+    <script id="fragmentShader" type="x-shader/x-fragment">
+        void main(){
+            gl_FragColor=vec4(1.0,1.0,0.0,1.0);
+        }
+    </script>
+
+
+    <script type="module">
+        import { initShaders } from "./jsm/Utils.js";
+        const canvas = document.getElementById("canvas")
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        const gl = canvas.getContext("webgl");
+
+        const vsSource = document.getElementById('vertexShader').innerText;
+        const fsSource = document.getElementById('fragmentShader').innerText;
+
+        initShaders(gl, vsSource, fsSource);
+
+        // getAttribLocation js从程序对象中获取变量的方法 参数为程序对象及其中变量的名称
+        const a_position = gl.getAttribLocation(gl.program, 'a_position')
+
+        // 设置点位信息 因为获取的变量是glsl es语言 所以设置变量要用vertexAttrib3f 参数1为变量名称，后面的参数为x,y,z的值
+        // gl.vertexAttrib3f(a_position,0.0,0.0,0.0)      
+
+        // webgl绘图是同步的，当同步执行画点，画完第一个点后会立刻画第二个点
+        // 但如果调用定时器画第二个点时，会将之前的内容全部清空，然后再绘制点
+        gl.clearColor(0.0, 0.0, 0.0, 1.0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        // 修改attribute变量
+        gl.vertexAttrib2f(a_position, -0.1, 0.0)
+        // 绘制顶点
+        gl.drawArrays(gl.POINT, 0, 1)
+        // 修改attribute变量
+        gl.vertexAttrib2f(a_position, 0.1, 0.0)
+        // 绘制顶点
+        gl.drawArrays(gl.POINT, 0, 1)
+
+        /**
+         * 1s后在中间位置画一个点,setTimeout是一个异步方法
+         * 一旦调用异步方法，执行drawArrays,那它就会重置之前的颜色缓冲区
+         * 之前的绘制颜色缓冲区都是存在的，所以在改变attribute变量绘制点时会一直存在
+         * 但一旦调用异步方法后，颜色缓冲区就空了
+         * */
+        setTimeout(() => {
+            gl.clearColor(0.0, 0.0, 1.0, 1.0);
+            gl.clear(gl.COLOR_BUFFER_BIT);
+            // 修改attribute变量
+            gl.vertexAttrib2f(a_position, 0.5, 0.5)
+            // 绘制顶点
+            gl.drawArrays(gl.POINT, 0, 1)
+        }, 1000)
+    </script>
+</body>
+
+</html>
