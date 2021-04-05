@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>08_用鼠标动态绘制多个点</title>
+</head>
+
+<body>
+    <canvas id="canvas"></canvas>
+
+    <!-- attribute属性只可用于订点着色器中，定义变量 [attribute 类型 变量名称] -->
+    <script id="vertexShader" type="x-shader/x-vertex">
+        attribute vec4 a_position;
+        void main(){
+            gl_Position=a_position;
+            gl_PointSize = 50.0;
+        }
+    </script>
+    <script id="fragmentShader" type="x-shader/x-fragment">
+        void main(){
+            gl_FragColor=vec4(1.0,1.0,0.0,1.0);
+        }
+    </script>
+
+
+    <script type="module">
+        import { initShaders } from "./jsm/Utils.js";
+        const canvas = document.getElementById("canvas")
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        const gl = canvas.getContext("webgl");
+
+        const vsSource = document.getElementById('vertexShader').innerText;
+        const fsSource = document.getElementById('fragmentShader').innerText;
+
+        initShaders(gl, vsSource, fsSource);
+
+        // getAttribLocation js从程序对象中获取变量的方法 参数为程序对象及其中变量的名称
+        const a_position = gl.getAttribLocation(gl.program, 'a_position')
+
+        // !!!!设置初始点位
+        const a_points = [
+            { x: 0, y: 0 },
+        ]
+
+        // 设置点位信息 因为获取的变量是glsl es语言 所以设置变量要用vertexAttrib3f 参数1为变量名称，后面的参数为x,y,z的值
+        // gl.vertexAttrib3f(a_position, 0.0, 0.0, 0.0)
+
+        gl.clearColor(0.0, 0.0, 0.0, 1.0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        render();
+
+        // gl.drawArrays(gl.POINT, 0, 1)
+
+        // 给canvas画布上面加上鼠标点击事件
+        canvas.addEventListener('click', ({ clientX, clientY }) => {
+            // 向量a clientX,clientY,即鼠标点击的位置
+            // console.log(clientX,clientY)
+            // 向量b {left,top} = canvas画布左上角的位置，width,height对应canvas画布的宽高
+            const { left, top, width, height } = canvas.getBoundingClientRect();
+            // 向量c = 向量a-向量b   获取了鼠标点击画布时，该鼠标点距离canvas画布的距离
+            const [cssX, cssY] = [clientX - left, clientY - top];
+            // 获取坐标原点的位置
+            const [halfWidth, halfHeight] = [width / 2, height / 2];
+            // 获取鼠标点相对于坐标原点的位置
+            let [xBaseCenter, yBaseCenter] = [cssX - halfWidth, cssY - halfHeight]
+            // 解决y方向差异
+            yBaseCenter = -yBaseCenter;
+            // 因为canvas画布的坐标系与webgl坐标系坐标基底的差异，所以要进行一个当前坐标点比上webgl坐标系求得最终在webgl中的位置
+            const [x, y] = [xBaseCenter / halfWidth, yBaseCenter / halfHeight];
+
+            a_points.push({ x, y })
+            render();
+
+            // 设置attribute变量，在每一次鼠标点击时重新设置点位，达到鼠标点击何处点位移动到何处的功能
+            // gl.vertexAttrib2f(a_position, x, y);
+            // gl.clear(gl.COLOR_BUFFER_BIT);
+            // gl.drawArrays(gl.POINTS, 0, 1)
+        })
+
+        // !!! 封装一个渲染方法，渲染顶点数组中的点
+        function render() {
+            // 第一步：刷底色
+            gl.clear(gl.COLOR_BUFFER_BIT);
+            // 第二步：画所有的点，遍历数组
+            a_points.forEach(({ x, y }) => {
+                gl.vertexAttrib2f(a_position, x, y)
+                gl.drawArrays(gl.POINT, 0, 1)
+            })
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>09_js修改顶点尺寸</title>
+</head>
+
+<body>
+    <canvas id="canvas"></canvas>
+    <!-- 顶点着色器  定义浮点型变量a_PointSize-->
+    <script id="vertexShader" type="x-shader/x-vertex">
+        attribute vec4 a_Position;
+        attribute float a_PointSize;
+        void main(){
+            gl_Position = a_Position;
+            gl_PointSize = a_PointSize;
+        }
+    </script>
+
+    <!-- 片元着色器 -->
+    <script id="fragmentShader" type="x-shader/x-fragment">
+        void main(){
+            gl_FragColor = vec4(1.0,1.0,0.0,1.0);
+        }
+    </script>
+
+    <script type="module">
+        import {initShaders} from './jsm/Utils.js';
+
+        const canvas = document.getElementById('canvas');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const gl = canvas.getContext('webgl');
+
+        // 获取顶点着色器文本和片元着色器文本
+        const vsSource = document.getElementById('vertexShader').innerText;
+        const fsSource = document.getElementById('fragmentShader').innerText;
+
+        initShaders(gl,vsSource,fsSource);
+
+        gl.clearColor(0.0,0.0,0.0,1.0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+
+        const a_Position = gl.getAttribLocation(gl.program,'a_Position');
+        // 获取变量
+        const a_PointSize = gl.getAttribLocation(gl.program,'a_PointSize');
+
+        gl.vertexAttrib2f(a_Position,0.0,0.0);
+        // 给控制点位大小的变量赋值
+        gl.vertexAttrib1f(a_PointSize,100.0);
+        
+        gl.drawArrays(gl.POINT,0,1);
+
+
+        
+    </script>
+</body>
+
+</html>
