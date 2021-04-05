@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>12_js鼠标随机绘制不同颜色的点</title>
+</head>
+
+<body>
+    <canvas id="canvas"></canvas>
+
+    <!-- attribute属性只可用于订点着色器中，定义变量 [attribute 类型 变量名称] -->
+    <script id="vertexShader" type="x-shader/x-vertex">
+        attribute vec4 a_position;
+        attribute float a_PointSize;
+        void main(){
+            gl_Position=a_position;
+            gl_PointSize = a_PointSize;
+        }
+    </script>
+    <script id="fragmentShader" type="x-shader/x-fragment">
+        precision mediump float;
+        uniform vec4 u_FragColor;
+        void main(){
+            gl_FragColor=u_FragColor;
+        }
+    </script>
+
+
+    <script type="module">
+        import { initShaders } from "./jsm/Utils.js";
+        const canvas = document.getElementById("canvas")
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        const gl = canvas.getContext("webgl");
+
+        const vsSource = document.getElementById('vertexShader').innerText;
+        const fsSource = document.getElementById('fragmentShader').innerText;
+
+        initShaders(gl, vsSource, fsSource);
+
+        // getAttribLocation js从程序对象中获取变量的方法 参数为程序对象及其中变量的名称
+        const a_position = gl.getAttribLocation(gl.program, 'a_position')
+        const a_PointSize = gl.getAttribLocation(gl.program, 'a_PointSize')
+        const u_FragColor = gl.getUniformLocation(gl.program, 'u_FragColor');
+
+        // !!!!设置初始点位
+        const a_points = [
+            {
+                x: 0,
+                y: 0, 
+                size: 10.0,
+                color:{
+                    r:1.0,
+                    g:0.0,
+                    b:0.0,
+                    a:1.0,
+                }
+            },
+        ]
+
+        gl.clearColor(0.0, 0.0, 0.0, 1.0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        render();
+        // 给canvas画布上面加上鼠标点击事件
+        canvas.addEventListener('click', ({ clientX, clientY }) => {
+            const { left, top, width, height } = canvas.getBoundingClientRect();
+            // 向量c = 向量a-向量b   获取了鼠标点击画布时，该鼠标点距离canvas画布的距离
+            const [cssX, cssY] = [clientX - left, clientY - top];
+            // 获取坐标原点的位置
+            const [halfWidth, halfHeight] = [width / 2, height / 2];
+            // 获取鼠标点相对于坐标原点的位置
+            let [xBaseCenter, yBaseCenter] = [cssX - halfWidth, cssY - halfHeight]
+            // 解决y方向差异
+            yBaseCenter = -yBaseCenter;
+            // 因为canvas画布的坐标系与webgl坐标系坐标基底的差异，所以要进行一个当前坐标点比上webgl坐标系求得最终在webgl中的位置
+            const [x, y] = [xBaseCenter / halfWidth, yBaseCenter / halfHeight];
+            // 点击鼠标时给一个10…110的值控制点位大小
+            const size = Math.random() * 100 + 10;
+            // 获取一个变量n,获取0~1之间的数值，修改rbga中的r和g，获取到的就是冷色调的点,若改变rgb，得到的就是灰色黑色这种
+            const n = Math.random();
+            const color = {
+                r:n,
+                g:n,
+                b:1.0,
+                a:1.0
+            }
+            a_points.push({ x, y, size,color })
+            render()
+        })
+
+        // !!! 封装一个渲染方法，渲染顶点数组中的点
+        function render() {
+            // 第一步：刷底色
+            gl.clear(gl.COLOR_BUFFER_BIT);
+            // 第二步：画所有的点，遍历数组
+            a_points.forEach(({ x, y, size,color:{r,g,b,a} }) => {
+                gl.vertexAttrib2f(a_position, x, y)
+                gl.vertexAttrib1f(a_PointSize, size)
+                // gl.uniform4f(u_FragColor,r,g,b,a)
+                const arr = new Float32Array([r,g,b,a])
+                gl.uniform4fv(u_FragColor,arr)
+                gl.drawArrays(gl.POINT, 0, 1)
+            })
+        }
+    </script>
+</body>
+
+</html>
